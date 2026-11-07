@@ -1,0 +1,13 @@
+# Compensa — HTTPS na porta 8443, certificado validado pelo DuckDNS (desafio DNS).
+# Não usa as portas 80/443, então convive com o MaxV10 sem conflito.
+{
+	https_port 8443
+	# o desafio é por DNS, então não precisa das portas 80/443
+}
+
+{$DOMINIO} {
+	tls {
+		dns duckdns {$DUCKDNS_TOKEN}
+	}
+	reverse_proxy compensa:8080
+}

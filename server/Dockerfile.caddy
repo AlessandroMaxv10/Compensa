@@ -1,0 +1,7 @@
+# Caddy com o módulo DuckDNS, para emitir o certificado HTTPS
+# sem precisar das portas 80/443 (que o MaxV10 já usa).
+FROM caddy:2-builder AS builder
+RUN xcaddy build --with github.com/caddy-dns/duckdns
+
+FROM caddy:2-alpine
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy

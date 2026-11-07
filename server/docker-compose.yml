@@ -1,0 +1,28 @@
+# Sobe o servidor do Compensa com HTTPS automático (Caddy + Let's Encrypt).
+# Os valores vêm do arquivo .env (criado pelo install.sh).
+services:
+  compensa:
+    build: .
+    restart: unless-stopped
+    environment:
+      ADMIN_USER: "${ADMIN_USER}"
+      ADMIN_PASS: "${ADMIN_PASS}"
+    volumes:
+      - ./data:/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    command: caddy reverse-proxy --from "${DOMINIO}" --to compensa:8080
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - compensa
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,34 @@
+# Compensa ao lado do MaxV10: HTTPS na porta 8443, via DuckDNS.
+# Não toca nas portas 80/443 (que o MaxV10 usa).
+services:
+  compensa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ADMIN_USER: "${ADMIN_USER}"
+      ADMIN_PASS: "${ADMIN_PASS}"
+    volumes:
+      - ./data:/data
+
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    environment:
+      DOMINIO: "${DOMINIO}"
+      DUCKDNS_TOKEN: "${DUCKDNS_TOKEN}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - compensa
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Compensa</string>
+    <string name="accessibility_desc">O Compensa lê somente o card de oferta de corrida dos apps Uber Motorista e 99 Motorista para dizer na hora se a corrida COMPENSA ou NÃO COMPENSA. Ele não aceita, não recusa e não toca em nada: a decisão é sempre sua. Nenhum dado sai do celular, exceto o endereço de destino consultado no mapa (OpenStreetMap) e no clima (Open-Meteo).</string>
+</resources>
