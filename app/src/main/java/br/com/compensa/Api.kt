@@ -250,6 +250,16 @@ object Api {
     // ---- fila de avaliações (👍/👎) para a IA coletiva ----
     private fun q(ctx: Context) = ctx.getSharedPreferences("compensa_fila", Context.MODE_PRIVATE)
 
+    /** Avisa o servidor que o motorista está ativo agora (bolinha verde no painel). */
+    fun ping(ctx: Context) {
+        val app = ctx.applicationContext
+        exec.execute {
+            val s = Session(app)
+            val t = s.token ?: return@execute
+            try { call(s.server, "POST", "/api/ping", t, JSONObject()) } catch (e: Exception) { }
+        }
+    }
+
     fun queueSample(ctx: Context, f: DoubleArray, good: Boolean) {
         synchronized(this) {
             val arr = try { JSONArray(q(ctx).getString("q", "[]")) } catch (e: Exception) { JSONArray() }

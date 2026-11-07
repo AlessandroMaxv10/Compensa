@@ -11,7 +11,8 @@ const PORT = Number(process.env.PORT || 8080);
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 const TOKEN_DAYS = 30;
-const INVITE_DAYS = 7; // prazo para o motorista fazer o primeiro acesso
+const INVITE_DAYS = 7;
+const TRIAL_DAYS = 3; // teste grátis automático ao liberar // prazo para o motorista fazer o primeiro acesso
 const MAX_SAMPLES = 100000;
 const N = 12;
 // mesmo "conhecimento de fábrica" do app
@@ -105,8 +106,9 @@ function readToken(req) {
   const u = db.users.find(x => x.id === parts[0]);
   if (!u || !accountOk(u)) return null;
   // o aparelho do token precisa estar entre os aparelhos liberados da conta
+  // token COM aparelho (app) precisa bater; token SEM aparelho (painel web) é liberado
   const devs = deviceList(u);
-  if (devs.length && (parts[2] === '0' || !devs.map(devHash).includes(parts[2]))) return null;
+  if (parts[2] !== '0' && !devs.map(devHash).includes(parts[2])) return null;
   return u;
 }
 function accountOk(u) { return !u.pending && u.active && (!u.validUntil || u.validUntil > Date.now()); }
@@ -139,6 +141,8 @@ function publicUser(u) {
     pending: !!u.pending, inviteExpired: !!u.pending && !inviteOk(u), inviteAt: u.inviteAt || null,
     devices: deviceList(u).length, maxDevices: u.maxDevices || 1,
     requested: !!u.requested, resetRequested: !!u.resetRequested,
+    trial: !!u.trial, trialEnded: !!(u.trial && u.validUntil && u.validUntil < Date.now()),
+    lastSeen: u.lastSeen || null, online: !!(u.lastSeen && Date.now() - u.lastSeen < 5 * 60e3),
     validUntil: u.validUntil, createdAt: u.createdAt, lastLogin: u.lastLogin, samples };
 }
 
@@ -246,7 +250,7 @@ const server = http.createServer(async (req, res) => {
       const u = db.users.find(x => !x.pending && x.user && x.user.toLowerCase() === String(b.user || '').trim().toLowerCase());
       if (!u || !checkPass(u, b.pass || '')) return send(res, 401, { error: 'Usuário ou senha incorretos' });
       if (!u.active) return send(res, 403, { error: 'Conta bloqueada. Fale com o administrador.' });
-      if (u.validUntil && u.validUntil < Date.now()) return send(res, 403, { error: 'Assinatura vencida. Fale com o administrador.' });
+      if (u.validUntil && u.validUntil < Date.now()) return send(res, 403, { error: u.trial ? 'Seu teste grátis de 3 dias acabou! Fale com o suporte no WhatsApp para continuar usando o Compensa.' : 'Seu acesso venceu. Fale com o suporte no WhatsApp para renovar.' });
       const dev = bindDevice(u, b.device);
       if (dev) return send(res, 409, { error: dev });
       u.lastLogin = Date.now(); save();
@@ -313,6 +317,8 @@ const server = http.createServer(async (req, res) => {
     const me = readToken(req);
     if (p.startsWith('/api/') && !me) return send(res, 401, { error: 'Faça login novamente' });
 
+    me.lastSeen = Date.now(); // marca presença em qualquer ação autenticada
+    if (req.method === 'POST' && p === '/api/ping') { save(); return send(res, 200, { ok: true }); }
     if (req.method === 'GET' && p === '/api/me')
       return send(res, 200, { ...publicUser(me), model: db.model });
 
@@ -360,6 +366,9 @@ const server = http.createServer(async (req, res) => {
           resetRequests: db.users.filter(u => u.resetRequested).length,
           withLogin: db.users.filter(u => u.user && !u.pending).length,
           installed: db.users.filter(u => deviceList(u).length > 0).length,
+          onlineNow: db.users.filter(u => u.lastSeen && Date.now() - u.lastSeen < 5 * 60e3).length,
+          trials: db.users.filter(u => u.trial && u.validUntil && u.validUntil > Date.now()).length,
+          trialsEnded: db.users.filter(u => u.trial && u.validUntil && u.validUntil < Date.now()).length,
           using7d, using24h,
           samples: db.samples.length, good, model: db.model });
       }
@@ -389,14 +398,14 @@ const server = http.createServer(async (req, res) => {
           if (u.id === me.id && (b.active === false || b.role === 'driver')) return send(res, 400, { error: 'Você não pode bloquear a si mesmo' });
           if (typeof b.active === 'boolean') u.active = b.active;
           if ('validUntil' in b) u.validUntil = b.validUntil ? Number(b.validUntil) : null;
-          if ('days' in b) { // define quantos dias a partir de agora (0 = sem validade / acesso vitalício)
+          if ('days' in b) { // define quantos dias a partir de agora (0 = sem validade)
             const n = Math.max(0, Math.min(3650, Number(b.days) || 0));
-            u.validUntil = n > 0 ? Date.now() + n * 864e5 : null;
+            u.validUntil = n > 0 ? Date.now() + n * 864e5 : null; u.trial = false;
           }
           if ('addDays' in b) { // soma dias ao prazo atual
             const n = Math.max(0, Math.min(3650, Number(b.addDays) || 0));
             const base = Math.max(Date.now(), u.validUntil || 0);
-            u.validUntil = base + n * 864e5;
+            u.validUntil = base + n * 864e5; u.trial = false;
           }
           if (b.name) u.name = String(b.name).slice(0, 80);
           if (b.role === 'admin' || b.role === 'driver') u.role = b.role;
@@ -407,7 +416,10 @@ const server = http.createServer(async (req, res) => {
           }
           if (b.unbind) u.devices = []; // desvincula os aparelhos: pode entrar num novo celular
           if ('maxDevices' in b) u.maxDevices = Number(b.maxDevices) === 2 ? 2 : 1;
-          if (b.approve) { u.requested = false; u.active = true; u.pending = true; u.inviteAt = Date.now(); } // libera o auto-cadastro
+          if (b.approve) { // libera o auto-cadastro já com teste grátis de 3 dias
+            u.requested = false; u.active = true; u.pending = true; u.inviteAt = Date.now();
+            u.validUntil = Date.now() + TRIAL_DAYS * 864e5; u.trial = true;
+          }
           if (b.pass && !u.pending) {
             if (String(b.pass).length < 6) return send(res, 400, { error: 'Senha com no mínimo 6 caracteres' });
             Object.assign(u, hashPass(b.pass));

@@ -48,6 +48,18 @@ class OfferReaderService : AccessibilityService() {
         }
         instance = this
         Api.sync(this)
+        startHeartbeat()
+    }
+
+    private val heartbeat = object : Runnable {
+        override fun run() {
+            Api.ping(this@OfferReaderService)
+            handler.postDelayed(this, 2 * 60_000) // a cada 2 minutos enquanto ativo
+        }
+    }
+    private fun startHeartbeat() {
+        handler.removeCallbacks(heartbeat)
+        handler.post(heartbeat)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -208,6 +220,7 @@ class OfferReaderService : AccessibilityService() {
 
     override fun onDestroy() {
         instance = null
+        handler.removeCallbacks(heartbeat)
         try { overlay.hide() } catch (_: Exception) { }
         tts?.shutdown()
         super.onDestroy()

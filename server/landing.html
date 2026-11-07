@@ -92,7 +92,7 @@
   <div class="nav">
     <div class="logo">🚗💲 Compensa</div>
     <div class="sp"></div>
-    <a class="cta" href="#acesso">Solicitar acesso</a>
+    <a class="cta" href="#baixar" style="background:#1b2f26;color:#EAF5EF;margin-right:6px">Baixar</a><a class="cta" href="#acesso">Solicitar acesso</a>
   </div>
 </header>
 
@@ -162,6 +162,22 @@
   </div>
 </section>
 
+<section id="baixar" class="wrap">
+  <div class="h2">Baixar o aplicativo</div>
+  <p class="lead">Depois que seu acesso for liberado, instale o app no seu Android.</p>
+  <div class="form" style="max-width:560px">
+    <p style="font-weight:800;color:var(--g2);margin-bottom:6px">⚠️ Antes de instalar — leia isto:</p>
+    <p class="muted" style="margin-bottom:8px">Como o app não vem da Play Store, o Android pode bloquear por segurança. É normal. Faça isto antes, uma vez só:</p>
+    <ol class="muted" style="text-align:left;line-height:1.9;padding-left:18px;margin-bottom:6px">
+      <li>Abra a <b>Play Store</b> → toque na sua <b>foto</b> (canto superior) → <b>Play Protect</b> → engrenagem ⚙️ → desligue <b>"Verificar apps com o Play Protect"</b>.</li>
+      <li>Toque no botão abaixo para baixar e abra o arquivo <b>Compensa.apk</b>.</li>
+      <li>Se o celular pedir, permita <b>"instalar apps desconhecidos"</b>.</li>
+    </ol>
+    <a class="btn p" href="/download" style="display:block;text-align:center;text-decoration:none">⬇️ Baixar o Compensa (Android)</a>
+    <p class="muted" style="margin-top:12px;text-align:center">Depois de instalar, abra o app e toque em <b>"Já tenho acesso"</b>. O próprio app te guia nas permissões.</p>
+  </div>
+</section>
+
 <footer>
   <p><b>Compensa</b> — para motoristas de aplicativo. Só para Android.</p>
   <p>Suporte: <a class="wn" href="https://wa.me/5511939370020" target="_blank">(11) 93937-0020</a></p>
@@ -189,7 +205,7 @@
       const j = await r.json().catch(()=>({}));
       if (r.ok) {
         msg.className = 'msg ok';
-        msg.textContent = '✅ Cadastro enviado! Agora toque no botão abaixo para liberarem seu acesso.';
+        msg.innerHTML = '✅ Cadastro enviado! Fale com o suporte para liberarem seu acesso. Assim que liberarem, <a href=\"#baixar\">baixe o app aqui</a>.';
         wa.href = 'https://wa.me/' + WHATS + '?text=' + encodeURIComponent('Olá! Fiz meu cadastro no Compensa (nome: ' + name + ') e quero liberar meu acesso.');
         wa.style.display = 'block';
       } else {

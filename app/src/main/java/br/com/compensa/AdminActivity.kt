@@ -50,7 +50,7 @@ class AdminActivity : Activity() {
         nName.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
         val nCpf = field(nova, "CPF (só números)", "")
         nCpf.inputType = InputType.TYPE_CLASS_NUMBER
-        val nDays = field(nova, "Dias de acesso (0 = sem limite)", "30")
+        val nDays = field(nova, "Dias de acesso (0 = sem limite)", "3")
         button(nova, "Liberar acesso") {
             val cpf = nCpf.text.toString().filter { it.isDigit() }
             if (nName.text.trim().split(" ").filter { it.isNotBlank() }.size < 2) { toast("Coloque nome e sobrenome"); return@button }

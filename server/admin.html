@@ -5,207 +5,209 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Compensa — Painel</title>
 <style>
-  :root { --g:#12A150; --gd:#0B8A43; --r:#D93025; --bg:#F3F6F4; --card:#fff; --tx:#1B2420; --mu:#66736C; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--tx); }
-  header { background:linear-gradient(135deg,var(--g),var(--gd)); color:#fff; padding:18px 20px; display:flex; align-items:center; gap:12px; }
-  header h1 { margin:0; font-size:22px; } header .sp { flex:1 }
-  header button { background:rgba(0,0,0,.2); color:#fff; border:0; border-radius:10px; padding:8px 12px; font-weight:600; }
-  main { max-width:980px; margin:0 auto; padding:16px; }
-  .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  h2 { margin:0 0 12px; font-size:17px; }
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
-  .stat { background:var(--bg); border-radius:12px; padding:12px; } .stat b { display:block; font-size:24px; } .stat span { color:var(--mu); font-size:13px; }
-  label { display:block; font-size:13px; color:var(--mu); margin:8px 0 4px; }
-  input, select { width:100%; padding:11px; border:1px solid #D5DDD8; border-radius:10px; font-size:15px; background:#fff; }
-  .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
-  .btn { background:var(--g); color:#fff; border:0; border-radius:10px; padding:11px 16px; font-size:15px; font-weight:700; cursor:pointer; margin-top:12px; }
-  .btn.sec { background:#E4EBE7; color:var(--tx); } .btn.red { background:var(--r); }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { text-align:left; padding:9px 6px; border-bottom:1px solid #EEF1EF; vertical-align:middle; }
-  th { color:var(--mu); font-weight:600; font-size:12px; text-transform:uppercase; }
-  .pill { display:inline-block; padding:3px 9px; border-radius:20px; font-size:12px; font-weight:700; }
-  .ok { background:#DDF5E6; color:var(--gd); } .wait { background:#FFF3D6; color:#9A6700; } .req { background:#DCE8FF; color:#1A56C4; } .no { background:#FBE1DF; color:var(--r); }
-  .act button { border:0; background:var(--bg); border-radius:8px; padding:6px 8px; margin:2px; cursor:pointer; font-size:13px; }
-  #login { max-width:380px; margin:60px auto; }
-  .err { color:var(--r); font-weight:600; margin-top:8px; min-height:20px; }
-  .muted { color:var(--mu); font-size:13px; }
-  .scroll { overflow-x:auto; }
+  :root{
+    --g:#12A150; --g2:#3DF08A; --gd:#0B8A43; --r:#E0433B; --amber:#E8A13B;
+    --bg:#07130D; --bg2:#0E2117; --card:#122820; --tx:#EAF5EF; --mu:#9FB6AA; --line:#1E3A2D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+  a{color:var(--g2)}
+  header{position:sticky;top:0;z-index:20;background:rgba(7,19,13,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:10px;max-width:1000px;margin:0 auto;padding:14px 18px}
+  .logo{font-weight:800;font-size:19px}.nav .sp{flex:1}
+  .nav button{background:#1b2f26;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
+  main{max-width:1000px;margin:0 auto;padding:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px}
+  h2{font-size:17px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+  .stat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .stat b{display:block;font-size:28px;line-height:1.1}.stat span{color:var(--mu);font-size:13px}
+  .stat.hot{background:linear-gradient(135deg,rgba(18,161,80,.25),rgba(61,240,138,.08));border-color:var(--g)}
+  .stat.hot b{color:var(--g2)}
+  label{display:block;font-size:13px;color:var(--mu);margin:10px 0 5px}
+  input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#0a1711;color:#fff;font-size:15px}
+  input:focus,select:focus{outline:none;border-color:var(--g)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .btn{background:var(--g);color:#fff;border:0;border-radius:11px;padding:12px 16px;font-size:15px;font-weight:800;cursor:pointer;margin-top:12px}
+  .btn.sec{background:#1b2f26;color:var(--tx);border:1px solid var(--line)}
+  .err{color:#ff8a82;font-weight:700;margin-top:8px;min-height:20px}.okc{color:var(--g2)}
+  .muted{color:var(--mu);font-size:13px}
+  /* usuários */
+  .u{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px}
+  .u .top{display:flex;align-items:center;gap:10px}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .dot.on{background:var(--g2);box-shadow:0 0 10px var(--g2)}
+  .dot.off{background:#C7443C}
+  .u .name{font-weight:700;font-size:16px;flex:1}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+  .ok{background:#15351f;color:var(--g2)} .no{background:#3a1a18;color:#ff8a82}
+  .wait{background:#3a2f12;color:var(--amber)} .req{background:#152a4a;color:#7fb0ff}
+  .u .sub{color:var(--mu);font-size:13px;margin-top:6px}
+  .acts{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .acts button{background:#1b2f26;color:var(--tx);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer}
+  .acts button.go{background:var(--g);color:#fff;border-color:var(--g)}
+  .acts button.del{background:#2a1512;color:#ff8a82;border-color:#512a26}
+  #login{max-width:380px;margin:50px auto}
+  .dlbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .dlbar a{display:inline-block;background:var(--g);color:#fff;text-decoration:none;font-weight:800;padding:12px 18px;border-radius:11px}
+  .dlbar a.sec{background:#1b2f26;color:var(--tx);border:1px solid var(--line)}
 </style>
 </head>
 <body>
-<header><h1>🚗💲 Compensa</h1><div class="sp"></div><button id="sair" hidden>Sair</button></header>
+<header><div class="nav"><div class="logo">🚗💲 Compensa <span class="muted" style="font-weight:500">· Painel</span></div><div class="sp"></div><button id="sair" hidden>Sair</button></div></header>
 
-<div id="login" class="card">
-  <h2>Entrar no painel</h2>
-  <label>Usuário</label><input id="lu" autocomplete="username">
-  <label>Senha</label><input id="lp" type="password" autocomplete="current-password">
-  <button class="btn" id="entrar" style="width:100%">Entrar</button>
-  <div class="err" id="lerr"></div>
-</div>
-
-<main id="app" hidden>
-  <div class="card">
-    <h2>Visão geral</h2>
-    <div class="stats" id="stats"></div>
-    <button class="btn sec" id="treinar">🧠 Treinar IA coletiva agora</button>
-    <p class="muted">A IA coletiva aprende com os 👍/👎 de todos os motoristas e manda esse conhecimento para cada celular. No celular, cada motorista ainda tem a sua IA pessoal por cima.</p>
-    <p class="muted">📲 Suporte (WhatsApp): <b>(11) 93937-0020</b>. Esse número aparece dentro do app para os motoristas.</p>
+<main>
+  <div id="login" class="card">
+    <h2>Entrar no painel</h2>
+    <label>Usuário</label><input id="lu" autocomplete="username">
+    <label>Senha</label><input id="lp" type="password" autocomplete="current-password">
+    <button class="btn" id="entrar" style="width:100%">Entrar</button>
+    <div class="err" id="lerr"></div>
   </div>
 
-  <div class="card">
-    <h2>Liberar acesso para um motorista</h2>
-    <p class="muted">Cadastre o nome completo e o CPF. No app, a pessoa toca em <b>Primeiro acesso</b>, digita nome + CPF e cria o próprio usuário e senha. O prazo para o primeiro acesso é de 7 dias.</p>
-    <div class="row">
-      <div><label>Nome completo</label><input id="nn" placeholder="João Pedro da Silva"></div>
-      <div><label>CPF</label><input id="nc" inputmode="numeric" placeholder="000.000.000-00" maxlength="14"></div>
-      <div><label>Validade</label>
-        <select id="nv"><option value="0">Sem validade</option><option value="7">7 dias (teste)</option><option value="30" selected>30 dias</option><option value="90">90 dias</option><option value="365">1 ano</option></select></div>
-      <div><label>Perfil</label><select id="nr"><option value="driver">Motorista</option><option value="admin">Administrador</option></select></div>
+  <div id="app" hidden>
+    <div class="card">
+      <h2>📊 Visão geral <span class="muted" id="auto" style="font-weight:500;margin-left:auto;font-size:12px"></span></h2>
+      <div class="stats" id="stats"></div>
     </div>
-    <button class="btn" id="criar">➕ Liberar acesso</button>
-    <div class="err" id="cerr"></div>
-  </div>
 
-  <div class="card">
-    <h2>Contas</h2>
-    <div class="scroll"><table><thead><tr><th>Motorista</th><th>Status</th><th>Validade</th><th>Último login</th><th>Avaliações</th><th>Ações</th></tr></thead><tbody id="users"></tbody></table></div>
-  </div>
-
-  <div class="card">
-    <h2>Minha senha</h2>
-    <div class="row">
-      <div><label>Senha atual</label><input id="po" type="password"></div>
-      <div><label>Senha nova</label><input id="pn" type="password"></div>
+    <div class="card">
+      <h2>📲 O aplicativo</h2>
+      <div class="dlbar">
+        <a href="/download">⬇️ Baixar o app (APK)</a>
+        <a class="sec" href="/" target="_blank">🌐 Ver o site público</a>
+      </div>
+      <p class="muted" style="margin-top:10px">Mande o site <b id="siteurl"></b> para os motoristas se cadastrarem.</p>
     </div>
-    <button class="btn sec" id="trocar">Trocar minha senha</button>
-    <div class="err" id="perr"></div>
+
+    <div class="card">
+      <h2>➕ Liberar acesso para um motorista</h2>
+      <div class="row">
+        <div><label>Nome completo</label><input id="nn" placeholder="João Pedro da Silva"></div>
+        <div><label>CPF</label><input id="nc" inputmode="numeric" placeholder="000.000.000-00" maxlength="14"></div>
+        <div><label>Dias de acesso (0 = sem limite)</label><input id="nd" inputmode="numeric" value="3"></div>
+      </div>
+      <button class="btn" id="criar">Liberar acesso</button>
+      <div class="err" id="cerr"></div>
+    </div>
+
+    <div class="card">
+      <h2>👥 Motoristas</h2>
+      <div id="users"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔒 Minha senha</h2>
+      <div class="row">
+        <div><label>Senha atual</label><input id="po" type="password"></div>
+        <div><label>Senha nova</label><input id="pn" type="password"></div>
+      </div>
+      <button class="btn sec" id="trocar">Trocar minha senha</button>
+      <div class="err" id="perr"></div>
+    </div>
   </div>
 </main>
 
 <script>
-let token = null;
-try { token = localStorage.getItem('compensa_token'); } catch (e) {}
-const $ = id => document.getElementById(id);
-const fmt = t => t ? new Date(t).toLocaleDateString('pt-BR') : '—';
+let token=null; try{token=localStorage.getItem('compensa_token')}catch(e){}
+let timer=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=t=>t?new Date(t).toLocaleDateString('pt-BR'):'—';
+function hora(t){ if(!t)return 'nunca'; const m=Math.floor((Date.now()-t)/60000);
+  if(m<1)return 'agora'; if(m<60)return 'há '+m+' min'; const h=Math.floor(m/60); if(h<24)return 'há '+h+'h'; return fmt(t); }
 
-async function api(method, url, body) {
-  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
-    body: body ? JSON.stringify(body) : undefined });
-  const j = await r.json().catch(() => ({}));
-  if (r.status === 401 && url !== '/api/login') { logout(); throw new Error('Sessão expirada'); }
-  if (!r.ok) throw new Error(j.error || 'Erro');
-  return j;
+async function api(method,url,body){
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401&&url!=='/api/login'){logout();throw new Error('Sessão expirada')}
+  if(!r.ok)throw new Error(j.error||'Erro'); return j;
 }
-function logout() { token = null; try { localStorage.removeItem('compensa_token'); } catch (e) {} show(); }
-function show() { $('login').hidden = !!token; $('app').hidden = !token; $('sair').hidden = !token; if (token) load(); }
+function logout(){token=null;try{localStorage.removeItem('compensa_token')}catch(e){}clearInterval(timer);show()}
+function show(){$('login').hidden=!!token;$('app').hidden=!token;$('sair').hidden=!token;
+  if(token){$('siteurl').textContent=location.origin;load();clearInterval(timer);timer=setInterval(load,30000);$('auto').textContent='atualiza sozinho'}}
 
-$('entrar').onclick = async () => {
-  $('lerr').textContent = '';
-  try {
-    const j = await api('POST', '/api/login', { user: $('lu').value, pass: $('lp').value });
-    if (j.role !== 'admin') throw new Error('Esta conta não é de administrador');
-    token = j.token; try { localStorage.setItem('compensa_token', token); } catch (e) {}
-    show();
-  } catch (e) { $('lerr').textContent = e.message; }
-};
-$('lp').onkeydown = e => { if (e.key === 'Enter') $('entrar').click(); };
-$('sair').onclick = logout;
+$('entrar').onclick=async()=>{$('lerr').textContent='';
+  try{const j=await api('POST','/api/login',{user:$('lu').value,pass:$('lp').value});
+    if(j.role!=='admin')throw new Error('Esta conta não é de administrador');
+    token=j.token;try{localStorage.setItem('compensa_token',token)}catch(e){}show();
+  }catch(e){$('lerr').textContent=e.message}};
+$('lp').onkeydown=e=>{if(e.key==='Enter')$('entrar').click()};
+$('sair').onclick=logout;
 
-async function load() {
-  try {
-    const s = await api('GET', '/api/admin/stats');
-    const pct = s.samples ? Math.round(100 * s.good / s.samples) : 0;
-    $('stats').innerHTML = `
-      <div class="stat"><b>${s.users}</b><span>contas</span></div>
-      <div class="stat"><b>${s.active}</b><span>ativas</span></div>
+async function load(){
+  try{
+    const s=await api('GET','/api/admin/stats');
+    $('stats').innerHTML=`
+      <div class="stat hot"><b>${s.onlineNow||0}</b><span>🟢 online agora</span></div>
+      <div class="stat"><b>${s.drivers||0}</b><span>motoristas</span></div>
+      <div class="stat"><b>${s.installed||0}</b><span>instalaram o app</span></div>
+      <div class="stat"><b>${s.using24h||0}</b><span>usaram hoje</span></div>
+      <div class="stat"><b>${s.using7d||0}</b><span>usaram na semana</span></div>
       <div class="stat"><b>${s.requests||0}</b><span>pedindo acesso</span></div>
-      <div class="stat"><b>${s.samples}</b><span>avaliações recebidas</span></div>
-      <div class="stat"><b>${pct}%</b><span>corridas boas</span></div>
-      <div class="stat"><b>${fmt(s.model.updatedAt)}</b><span>último treino da IA</span></div>`;
-    const us = await api('GET', '/api/admin/users');
-    $('users').innerHTML = us.map(u => {
-      const venc = u.validUntil && u.validUntil < Date.now();
-      const st = u.requested ? '<span class="pill req">📝 Pediu acesso</span>'
-        : !u.active ? '<span class="pill no">Bloqueada</span>'
-        : u.pending ? (u.inviteExpired ? '<span class="pill no">Convite vencido</span>' : '<span class="pill wait">Aguardando 1º acesso</span>')
-        : venc ? '<span class="pill no">Vencida</span>' : '<span class="pill ok">Ativa</span>';
-      const resetBadge = u.resetRequested ? ' <span class="pill req">🔑 Pediu troca de senha</span>' : '';
-      return `<tr><td><b>${esc(u.name)}</b>${u.role === 'admin' ? ' 👑' : ''}<br><span class="muted">${u.user ? 'usuário: ' + esc(u.user) : 'sem usuário ainda'}${u.cpf ? ' • CPF ' + esc(u.cpf) : ''}</span></td>
-        <td>${st}${resetBadge}</td><td>${u.validUntil ? fmt(u.validUntil) : 'Sem validade'}</td><td>${fmt(u.lastLogin)}</td><td>${u.samples}</td>
-        <td class="act">
-          ${u.requested ? `<button onclick="act('${u.id}','aprovar')">✅ Liberar acesso</button>` : ''}
-          <button onclick="act('${u.id}','renovar')">+30 dias</button>
-          <button onclick="act('${u.id}','${u.active ? 'bloquear' : 'liberar'}')">${u.active ? 'Bloquear' : 'Liberar'}</button>
-          ${u.cpf ? `<button onclick="act('${u.id}','reset')">${u.pending ? 'Renovar convite' : 'Refazer 1º acesso'}</button>` : ''}
-          ${u.devices ? `<button onclick="act('${u.id}','unbind')">📱 Desvincular (${u.devices}/${u.maxDevices})</button>` : ''}
-          ${!u.pending && u.cpf ? `<button onclick="act('${u.id}','devices')">${u.maxDevices === 2 ? 'Permitir 1 aparelho' : 'Permitir 2 aparelhos'}</button>` : ''}
-          ${u.pending ? '' : `<button onclick="act('${u.id}','senha')">Senha</button>`}
-          <button onclick="act('${u.id}','excluir')">Excluir</button></td></tr>`;
-    }).join('');
-    window._users = us;
-  } catch (e) { console.error(e); }
-}
-function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-
-async function act(id, what) {
-  const u = window._users.find(x => x.id === id);
-  try {
-    if (what === 'renovar') {
-      const base = Math.max(Date.now(), u.validUntil || 0);
-      await api('PATCH', '/api/admin/users/' + id, { validUntil: base + 30 * 864e5, active: true });
-    } else if (what === 'bloquear' || what === 'liberar') {
-      await api('PATCH', '/api/admin/users/' + id, { active: what === 'liberar' });
-    } else if (what === 'reset') {
-      if (!u.pending && !confirm(u.name + ' vai precisar fazer o primeiro acesso de novo (nome + CPF) e criar novo usuário e senha. Continuar?')) return;
-      await api('PATCH', '/api/admin/users/' + id, { reset: true });
-      alert('Pronto! ' + u.name + ' tem 7 dias para fazer o primeiro acesso no app.');
-    } else if (what === 'unbind') {
-      if (!confirm('Desvincular os aparelhos de ' + u.name + '? Os celulares atuais serão desconectados e a conta poderá entrar de novo.')) return;
-      await api('PATCH', '/api/admin/users/' + id, { unbind: true });
-      alert('Pronto. ' + u.name + ' já pode entrar de novo (os aparelhos antigos foram liberados).');
-    } else if (what === 'aprovar') {
-      if (!confirm('Liberar o acesso de ' + u.name + '? Ele poderá criar login e senha (primeiro acesso) com nome + CPF.')) return;
-      await api('PATCH', '/api/admin/users/' + id, { approve: true });
-      alert(u.name + ' liberado! Avise para abrir o app e tocar em "Já tenho acesso" → primeiro acesso.');
-    } else if (what === 'devices') {
-      const novo = u.maxDevices === 2 ? 1 : 2;
-      if (novo === 1 && u.devices > 1 && !confirm('Voltar para 1 aparelho vai desvincular os atuais. Continuar?')) return;
-      await api('PATCH', '/api/admin/users/' + id, novo === 1 ? { maxDevices: 1, unbind: true } : { maxDevices: 2 });
-      alert(novo === 2 ? u.name + ' agora pode usar 2 aparelhos dele.' : u.name + ' voltou para 1 aparelho.');
-    } else if (what === 'senha') {
-      const p = prompt('Nova senha para ' + u.user + ' (mín. 6):'); if (!p) return;
-      await api('PATCH', '/api/admin/users/' + id, { pass: p }); alert('Senha alterada');
-    } else if (what === 'excluir') {
-      if (!confirm('Excluir a conta ' + u.user + '? Isso não pode ser desfeito.')) return;
-      await api('DELETE', '/api/admin/users/' + id);
-    }
-    load();
-  } catch (e) { alert(e.message); }
+      <div class="stat"><b>${s.trials||0}</b><span>🎁 em teste (3 dias)</span></div>
+      <div class="stat"><b>${s.trialsEnded||0}</b><span>testes acabados</span></div>
+      <div class="stat"><b>${s.samples||0}</b><span>avaliações (IA)</span></div>`;
+    const us=await api('GET','/api/admin/users');
+    window._u=us;
+    us.sort((a,b)=>(b.requested-a.requested)||(b.online-a.online)||((b.lastSeen||0)-(a.lastSeen||0)));
+    $('users').innerHTML=us.map(u=>{
+      const venc=u.validUntil&&u.validUntil<Date.now();
+      const st=u.requested?'<span class="pill req">Pediu acesso</span>'
+        :!u.active?'<span class="pill no">Bloqueada</span>'
+        :u.pending?(u.inviteExpired?'<span class="pill no">Convite vencido</span>':'<span class="pill wait">Aguardando 1º acesso</span>')
+        :u.trialEnded?'<span class="pill no">🎁 Teste acabou</span>'
+        :venc?'<span class="pill no">Vencida</span>'
+        :u.trial?'<span class="pill wait">🎁 Em teste</span>'
+        :'<span class="pill ok">Ativa</span>';
+      const reset=u.resetRequested?' <span class="pill req">🔑 troca de senha</span>':'';
+      return `<div class="u">
+        <div class="top"><span class="dot ${u.online?'on':'off'}"></span>
+          <span class="name">${esc(u.name)}${u.role==='admin'?' 👑':''}</span>${st}${reset}</div>
+        <div class="sub">${u.user?'usuário: '+esc(u.user):'sem usuário ainda'}${u.cpf?' · CPF '+esc(u.cpf):''}
+          · ${u.online?'🟢 online':'⚪ visto '+hora(u.lastSeen)}
+          · validade: ${u.validUntil?fmt(u.validUntil):'sem limite'}
+          · aparelhos: ${u.devices}/${u.maxDevices}</div>
+        <div class="acts">
+          ${u.requested?`<button class="go" onclick="act('${u.id}','aprovar')">✅ Liberar</button>`:''}
+          <button onclick="act('${u.id}','${u.active?'bloquear':'liberar'}')">${u.active?'Bloquear':'Liberar'}</button>
+          <button onclick="act('${u.id}','dias')">Dias de acesso</button>
+          <button onclick="act('${u.id}','mais30')">+30 dias</button>
+          <button onclick="act('${u.id}','apar')">${u.maxDevices===2?'1 aparelho':'2 aparelhos'}</button>
+          ${u.devices>0?`<button onclick="act('${u.id}','desvincular')">Desvincular</button>`:''}
+          ${!u.pending&&u.cpf?`<button onclick="act('${u.id}','refazer')">Refazer acesso</button>`:''}
+          <button class="del" onclick="act('${u.id}','excluir')">Excluir</button>
+        </div></div>`;
+    }).join('')||'<p class="muted">Nenhum motorista ainda.</p>';
+  }catch(e){}
 }
 
-$('criar').onclick = async () => {
-  $('cerr').textContent = '';
-  const dias = Number($('nv').value);
-  try {
-    await api('POST', '/api/admin/users', { name: $('nn').value, cpf: $('nc').value,
-      role: $('nr').value, validUntil: dias ? Date.now() + dias * 864e5 : null });
-    $('cerr').style.color = 'var(--g)'; $('cerr').textContent = 'Acesso liberado para ' + $('nn').value + '! Peça para tocar em "Primeiro acesso" no app.';
-    $('nn').value = $('nc').value = '';
+async function act(id,what){
+  const u=window._u.find(x=>x.id===id);
+  try{
+    if(what==='aprovar'){await api('PATCH','/api/admin/users/'+id,{approve:true});}
+    else if(what==='bloquear'||what==='liberar'){await api('PATCH','/api/admin/users/'+id,{active:what==='liberar'});}
+    else if(what==='mais30'){await api('PATCH','/api/admin/users/'+id,{addDays:30});}
+    else if(what==='dias'){const d=prompt('Quantos dias de acesso para '+u.name+'? (0 = sem limite)','30');if(d===null)return;await api('PATCH','/api/admin/users/'+id,{days:Number(d)});}
+    else if(what==='apar'){const novo=u.maxDevices===2?1:2;await api('PATCH','/api/admin/users/'+id,novo===1?{maxDevices:1,unbind:true}:{maxDevices:2});}
+    else if(what==='desvincular'){await api('PATCH','/api/admin/users/'+id,{unbind:true});}
+    else if(what==='refazer'){if(!confirm('Refazer acesso de '+u.name+'? Ele cria login e senha de novo com nome + CPF.'))return;await api('PATCH','/api/admin/users/'+id,{reset:true});}
+    else if(what==='excluir'){if(!confirm('Excluir '+u.name+'? Não dá para desfazer.'))return;await api('DELETE','/api/admin/users/'+id);}
     load();
-  } catch (e) { $('cerr').style.color = ''; $('cerr').textContent = e.message; }
-};
-$('treinar').onclick = async () => { try { await api('POST', '/api/admin/train'); load(); } catch (e) { alert(e.message); } };
-$('trocar').onclick = async () => {
-  $('perr').textContent = '';
-  try { await api('POST', '/api/password', { old: $('po').value, pass: $('pn').value });
-    $('perr').style.color = 'var(--g)'; $('perr').textContent = 'Senha trocada!'; $('po').value = $('pn').value = ''; }
-  catch (e) { $('perr').style.color = ''; $('perr').textContent = e.message; }
-};
-$('nc').oninput = e => {
-  const d = e.target.value.replace(/\D/g, '').slice(0, 11);
-  e.target.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-};
+  }catch(e){alert(e.message)}
+}
+
+$('nc').oninput=e=>{let d=e.target.value.replace(/\D/g,'').slice(0,11);
+  e.target.value=d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')};
+$('criar').onclick=async()=>{$('cerr').textContent='';
+  try{const u=await api('POST','/api/admin/users',{name:$('nn').value,cpf:$('nc').value});
+    const d=Number($('nd').value);if(d>0)await api('PATCH','/api/admin/users/'+u.id,{days:d});
+    $('nn').value=$('nc').value='';$('cerr').className='err okc';$('cerr').textContent='Acesso liberado! Peça para a pessoa abrir o app e fazer o primeiro acesso.';load();
+  }catch(e){$('cerr').className='err';$('cerr').textContent=e.message}};
+$('trocar').onclick=async()=>{$('perr').textContent='';
+  try{await api('POST','/api/password',{old:$('po').value,pass:$('pn').value});
+    $('perr').className='err okc';$('perr').textContent='Senha trocada!';$('po').value=$('pn').value='';
+  }catch(e){$('perr').className='err';$('perr').textContent=e.message}};
 show();
 </script>
 </body>

@@ -52,11 +52,20 @@ class MainActivity : Activity() {
         val st = card(root, "Leitura das corridas")
         statusText = text("", 15f)
         st.addView(statusText)
-        button(st, "Ativar leitura da tela (Acessibilidade)") {
+        st.addView(text("Passo 1: toque abaixo, ache o Compensa na lista e ligue a chave. Depois toque em Permitir.", 14f))
+        button(st, "1) Ativar leitura da tela (Acessibilidade)") {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            Toast.makeText(this, "Toque em \"Compensa\" e ative", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Ache \"Compensa\" na lista e ligue a chave", Toast.LENGTH_LONG).show()
         }
-        st.addView(text("No Android 13 ou mais novo, se a opção estiver bloqueada: Configurações › Apps › Compensa › ⋮ › \"Permitir configurações restritas\".", 13f, color = Ui.MUTED))
+        st.addView(text("📱 Se o Compensa aparecer CINZA/bloqueado (comum em Xiaomi/Redmi):", 13f, true, Color.rgb(217, 48, 37)))
+        st.addView(text("Toque no botão abaixo, role a tela e toque em \"Permitir configurações restritas\" (confirme com a digital). Depois volte e ligue a chave.", 13f, color = Ui.MUTED))
+        button(st, "Abrir configurações do Compensa (liberar restrição)", primary = false) {
+            try {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + packageName)))
+            } catch (e: Exception) {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
+            }
+        }
         button(st, "Testar com corrida de exemplo (Uber)", primary = false) { test(SAMPLE_UBER, "Uber") }
         button(st, "Testar com corrida de exemplo (99)", primary = false) { test(SAMPLE_99, "99") }
         previewText = text("", 15f, true, Color.WHITE).apply { setPadding(dp(12), dp(10), dp(12), dp(10)); visibility = android.view.View.GONE }
@@ -73,6 +82,18 @@ class MainActivity : Activity() {
         loc.addView(locText)
         loc.addView(text("O Compensa usa onde você está agora para saber se o destino é fora da sua cidade e contar a volta vazia certinho.", 13f, color = Ui.MUTED))
         button(loc, "Permitir localização") { pedirLocalizacao() }
+
+        // --- Deixar sempre ligado ---
+        val bat = card(root, "🔋 Deixar o Compensa sempre ligado")
+        bat.addView(text("Pra ele não desligar sozinho enquanto você dirige, peça pro celular não \"economizar\" ele.", 14f))
+        button(bat, "Não otimizar a bateria do Compensa", primary = false) {
+            try {
+                startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                Toast.makeText(this, "Ache o Compensa e escolha \"Não otimizar\" / \"Sem restrições\"", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                try { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + packageName))) } catch (e2: Exception) {}
+            }
+        }
 
         // --- Metas e custos ---
         val cfg = card(root, "Suas metas e seu carro")
