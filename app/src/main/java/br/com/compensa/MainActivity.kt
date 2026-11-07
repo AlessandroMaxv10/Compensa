@@ -48,6 +48,12 @@ class MainActivity : Activity() {
         val root = column().apply { setPadding(dp(16), dp(16), dp(16), dp(28)) }
         subtitle = header(root, "Compensa", "")
 
+        // Botão minimizar: deixa o app rodando escondido e volta para a tela inicial
+        button(root, "⬇️ Minimizar (deixar rodando no fundo)", primary = false) {
+            Toast.makeText(this, "Compensa rodando no fundo. Abra a Uber ou a 99.", Toast.LENGTH_LONG).show()
+            moveTaskToBack(true)
+        }
+
         // --- Status e ativação ---
         val st = card(root, "Leitura das corridas")
         statusText = text("", 15f)
@@ -217,8 +223,10 @@ class MainActivity : Activity() {
         locText.setTextColor(if (locOn) Ui.GREEN else Color.rgb(217, 48, 37))
 
         val vu = session.validUntil
-        subtitle.text = "Olá, " + session.name.ifEmpty { session.lastUser } +
-            if (vu > 0) " • conta válida até " + SimpleDateFormat("dd/MM/yyyy", BR).format(Date(vu)) else ""
+        subtitle.text = if (vu > 0) {
+            val dias = Math.max(0, ((vu - System.currentTimeMillis()) / 86400000L + 1).toInt())
+            "Olá, " + session.name.ifEmpty { session.lastUser } + " • faltam " + dias + if (dias == 1) " dia de acesso" else " dias de acesso"
+        } else "Olá, " + session.name.ifEmpty { session.lastUser }
 
         val brain = Brain(this)
         val n = brain.samples

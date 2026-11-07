@@ -7,6 +7,15 @@ android {
     namespace = "br.com.compensa"
     compileSdk = 35
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../compensa-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "br.com.compensa"
         minSdk = 26
