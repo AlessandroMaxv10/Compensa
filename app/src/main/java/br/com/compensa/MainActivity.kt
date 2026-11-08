@@ -30,6 +30,7 @@ class MainActivity : Activity() {
     private lateinit var prefs: Prefs
     private lateinit var session: Session
     private lateinit var statusText: TextView
+    private lateinit var overlayText: TextView
     private lateinit var locText: TextView
     private lateinit var todayText: TextView
     private lateinit var aiText: TextView
@@ -71,6 +72,19 @@ class MainActivity : Activity() {
             } catch (e: Exception) {
                 startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
             }
+        }
+        overlayText = text("", 15f)
+        st.addView(overlayText)
+        st.addView(text("Passo 2: deixe o balão aparecer POR CIMA da Uber e da 99 (igual à bolinha da Uber).", 14f))
+        button(st, "2) Deixar o balão aparecer sobre a Uber/99") {
+            try {
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + packageName)))
+            } catch (e: Exception) {
+                try { startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) } catch (e2: Exception) {
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + packageName)))
+                }
+            }
+            Toast.makeText(this, "Ache o Compensa e ligue \"Sobrepor outros apps\" / \"Pop-up\"", Toast.LENGTH_LONG).show()
         }
         button(st, "Testar com corrida de exemplo (Uber)", primary = false) { test(SAMPLE_UBER, "Uber") }
         button(st, "Testar com corrida de exemplo (99)", primary = false) { test(SAMPLE_99, "99") }
@@ -216,6 +230,11 @@ class MainActivity : Activity() {
         statusText.text = if (on) "✅ Leitura ATIVA. Abra a Uber ou a 99 e fique online."
         else "⛔ Leitura DESATIVADA. Toque no botão abaixo e ative o Compensa."
         statusText.setTextColor(if (on) Ui.GREEN else Color.rgb(217, 48, 37))
+
+        val overlayOn = android.os.Build.VERSION.SDK_INT < 26 || Settings.canDrawOverlays(this)
+        overlayText.text = if (overlayOn) "✅ Pode aparecer sobre a Uber/99."
+        else "⛔ Falta liberar o balão sobre a Uber/99. Toque no botão \"2)\" abaixo."
+        overlayText.setTextColor(if (overlayOn) Ui.GREEN else Color.rgb(217, 48, 37))
 
         val locOn = Locator.hasPermission(this)
         locText.text = if (locOn) "✅ Localização permitida. O cálculo usa onde você está agora."
