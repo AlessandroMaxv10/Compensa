@@ -75,6 +75,11 @@ class OfferReaderService : AccessibilityService() {
     private fun scan() {
         val text = collectText()
         if (!text.contains("R$")) { lastDiag += " | sem R$"; return }
+        // Blindagem: nunca reage à própria tela/balão do Compensa (corrida falsa).
+        if (text.contains("COMPENSA") || text.contains("Lucro estimado") ||
+            text.contains("IA aprendendo") || text.contains("NÃO COMPENSA")) {
+            lastDiag += " | ignorado (tela do proprio Compensa)"; return
+        }
         val offer = OfferParser.parse(text, lastApp)
         if (offer == null) { lastDiag += " | R$ achado mas nao entendeu o card"; return }
         lastDiag += " | OK R$" + offer.fare
