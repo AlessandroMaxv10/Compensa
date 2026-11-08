@@ -41,6 +41,9 @@ class Session(ctx: Context) {
             .apply()
     }
 
+    /** Guarda o usuário digitado para já aparecer preenchido na próxima vez. */
+    fun rememberUser(user: String) { sp.edit().putString("user", user.trim()).apply() }
+
     fun updateValidity(validUntil: Long, active: Boolean) {
         if (!active) logout() else sp.edit().putLong("validUntil", validUntil).apply()
     }

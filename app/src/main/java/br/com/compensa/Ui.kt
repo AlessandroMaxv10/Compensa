@@ -64,6 +64,41 @@ object Ui {
         return e
     }
 
+    /** Campo de senha com botão 👁 para mostrar/ocultar o que foi digitado. */
+    fun Activity.passwordField(parent: LinearLayout, label: String, value: String): EditText {
+        parent.addView(text(label, 13f, color = MUTED))
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val e = EditText(this).apply {
+            setText(value)
+            textSize = 16f
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        row.addView(e, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        val eye = TextView(this).apply {
+            text = "👁"
+            textSize = 22f
+            setPadding(dp(14), dp(8), dp(6), dp(8))
+            setTextColor(MUTED)
+        }
+        var shown = false
+        eye.setOnClickListener {
+            shown = !shown
+            val start = e.selectionStart
+            val end = e.selectionEnd
+            e.inputType = InputType.TYPE_CLASS_TEXT or
+                (if (shown) InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD else InputType.TYPE_TEXT_VARIATION_PASSWORD)
+            e.typeface = Typeface.DEFAULT
+            if (start in 0..e.text.length && end in 0..e.text.length) e.setSelection(start, end)
+            eye.text = if (shown) "🙈" else "👁"
+        }
+        row.addView(eye)
+        parent.addView(row)
+        return e
+    }
+
     fun Activity.button(parent: LinearLayout, label: String, primary: Boolean = true, click: () -> Unit): Button {
         val b = Button(this).apply {
             text = label

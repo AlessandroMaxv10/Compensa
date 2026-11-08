@@ -17,6 +17,7 @@ import br.com.compensa.Ui.dp
 import br.com.compensa.Ui.field
 import br.com.compensa.Ui.gone
 import br.com.compensa.Ui.header
+import br.com.compensa.Ui.passwordField
 import br.com.compensa.Ui.text
 
 /**
@@ -50,11 +51,12 @@ class LoginActivity : Activity() {
         // ---------- Entrar ----------
         loginCard = card(root, "Entrar")
         val user = field(loginCard, "Usuário", session.lastUser, numeric = false)
-        val pass = field(loginCard, "Senha", "", password = true)
+        val pass = passwordField(loginCard, "Senha", "")
         lateinit var bLogin: Button
         bLogin = button(loginCard, "Entrar") {
             val srv = checkServer() ?: return@button
             if (user.text.isBlank() || pass.text.isEmpty()) { msg.text = "Preencha usuário e senha"; return@button }
+            session.rememberUser(user.text.toString().trim())
             bLogin.isEnabled = false
             msg.text = "Entrando…"
             Api.login(this, srv, user.text.toString().trim(), pass.text.toString()) { err ->
@@ -74,8 +76,8 @@ class LoginActivity : Activity() {
         cpf.inputType = InputType.TYPE_CLASS_NUMBER
         firstCard.addView(text("Agora crie seu acesso:", 15f, true))
         val newUser = field(firstCard, "Crie um usuário (sem espaço, ex: joao.silva)", "", numeric = false)
-        val newPass = field(firstCard, "Crie uma senha (mínimo 6, não use o CPF)", "", password = true)
-        val newPass2 = field(firstCard, "Repita a senha", "", password = true)
+        val newPass = passwordField(firstCard, "Crie uma senha (mínimo 6, não use o CPF)", "")
+        val newPass2 = passwordField(firstCard, "Repita a senha", "")
         lateinit var bFirst: Button
         bFirst = button(firstCard, "Criar meu acesso") {
             val srv = checkServer() ?: return@button
