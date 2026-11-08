@@ -184,35 +184,44 @@ class OfferReaderService : AccessibilityService() {
     private var lastApp = "Uber"
 
     private fun collectText(): String {
-        val sb = StringBuilder()
-        val ws = try { windows } catch (e: Exception) { emptyList() }
+        // Junta o texto de TODAS as janelas do app de corrida (a oferta às vezes
+        // aparece numa janela separada por cima do mapa) + a janela ativa.
+        // Usa um conjunto para não repetir linhas quando as janelas se sobrepõem.
+        val lines = LinkedHashSet<String>()
+        var foundRide = false
+        val ws = try { windows } catch (e: Exception) { emptyList<android.view.accessibility.AccessibilityWindowInfo>() }
         for (w in ws) {
             val r = w.root ?: continue
             val pkg = r.packageName?.toString() ?: continue
             if (!isRideApp(pkg) || !appEnabled(pkg)) continue
             lastApp = if (pkg.contains("99")) "99" else "Uber"
-            walk(r, sb, 0)
+            foundRide = true
+            walk(r, lines, 0)
         }
-        if (sb.isEmpty()) {
-            val r = rootInActiveWindow
-            val pkg = r?.packageName?.toString()
-            if (r != null && pkg != null && isRideApp(pkg)) {
-                lastApp = if (pkg.contains("99")) "99" else "Uber"
-                walk(r, sb, 0)
+        val ra = try { rootInActiveWindow } catch (e: Exception) { null }
+        if (ra != null) {
+            val rpkg = ra.packageName?.toString() ?: ""
+            if (isRideApp(rpkg) && appEnabled(rpkg)) {
+                lastApp = if (rpkg.contains("99")) "99" else "Uber"
+                walk(ra, lines, 0)
+            } else if (foundRide) {
+                // app de corrida está na frente, mas a oferta pode estar numa
+                // janela de overlay com outro nome de pacote: lê mesmo assim.
+                walk(ra, lines, 0)
             }
         }
-        return sb.toString()
+        return lines.joinToString("\n")
     }
 
-    private fun walk(n: AccessibilityNodeInfo, sb: StringBuilder, depth: Int) {
-        if (depth > 40 || sb.length > 8000) return
+    private fun walk(n: AccessibilityNodeInfo, out: MutableSet<String>, depth: Int) {
+        if (depth > 60 || out.size > 500) return
         val t = n.text
-        if (!t.isNullOrBlank()) sb.append(t).append('\n')
+        if (!t.isNullOrBlank()) out.add(t.toString().trim())
         val cd = n.contentDescription
-        if (!cd.isNullOrBlank() && cd.toString() != t?.toString()) sb.append(cd).append('\n')
+        if (!cd.isNullOrBlank()) out.add(cd.toString().trim())
         for (i in 0 until n.childCount) {
             val c = n.getChild(i) ?: continue
-            walk(c, sb, depth + 1)
+            walk(c, out, depth + 1)
         }
     }
 
