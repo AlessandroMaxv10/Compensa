@@ -241,7 +241,9 @@ class MainActivity : Activity() {
         else "⛔ Falta liberar o balão sobre a Uber/99. Toque no botão \"2)\" abaixo."
         overlayText.setTextColor(if (overlayOn) Ui.GREEN else Color.rgb(217, 48, 37))
 
-        if (::diagText.isInitialized) diagText.text = OfferReaderService.lastDiag
+        if (::diagText.isInitialized) {
+            diagText.text = OfferReaderService.lastDiag + "\n\nTexto lido:\n" + OfferReaderService.lastRaw
+        }
 
         val locOn = Locator.hasPermission(this)
         locText.text = if (locOn) "✅ Localização permitida. O cálculo usa onde você está agora."

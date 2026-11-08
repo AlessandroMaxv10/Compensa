@@ -66,10 +66,22 @@ class OfferReaderService : AccessibilityService() {
         val pkg = event?.packageName?.toString() ?: return
         if (!isRideApp(pkg)) return
         if (!appEnabled(pkg)) return
+        lastApp = if (pkg.contains("99")) "99" else "Uber"
+        // Captura IMEDIATAMENTE o que mudou na tela (nó de origem do evento).
+        // É a forma mais confiável de pegar o card da oferta da Uber/99.
+        try {
+            val src = event.source
+            if (src != null) {
+                val set = LinkedHashSet<String>()
+                walk(src, set, 0)
+                if (set.isNotEmpty()) eventText = set.joinToString("\n")
+            }
+        } catch (e: Exception) {}
         if (pending) return
         pending = true
-        // espera 60 ms para o card terminar de desenhar e lê tudo de uma vez
-        handler.postDelayed({ pending = false; scan() }, 60)
+        // duas tentativas: o card pode terminar de desenhar um pouco depois
+        handler.postDelayed({ scan() }, 80)
+        handler.postDelayed({ pending = false; scan() }, 550)
     }
 
     private fun scan() {
@@ -189,13 +201,16 @@ class OfferReaderService : AccessibilityService() {
     }
 
     private var lastApp = "Uber"
+    private var eventText = ""
 
     private fun collectText(): String {
         // Junta o texto de TODAS as janelas do app de corrida (a oferta às vezes
         // aparece numa janela separada por cima do mapa) + a janela ativa.
         // Usa um conjunto para não repetir linhas quando as janelas se sobrepõem.
         val lines = LinkedHashSet<String>()
-        var foundRide = false
+        // Começa pelo que mudou na tela (nó de origem do último evento).
+        if (eventText.isNotEmpty()) lines.addAll(eventText.split("\n"))
+        var foundRide = eventText.isNotEmpty()
         val ws = try { windows } catch (e: Exception) { emptyList<android.view.accessibility.AccessibilityWindowInfo>() }
         for (w in ws) {
             val r = w.root ?: continue
@@ -214,9 +229,11 @@ class OfferReaderService : AccessibilityService() {
                 walk(ra, lines, 0)
             }
         }
-        lastDiag = "app=" + lastApp + " janelas=" + ws.size + " ride=" + foundRide +
-            " linhas=" + lines.size + " R$=" + (if (lines.any { it.contains("R$") }) "sim" else "nao")
-        return lines.joinToString("\n")
+        val joined = lines.joinToString("\n")
+        lastDiag = "app=" + lastApp + " janelas=" + ws.size + " evento=" + (if (eventText.isNotEmpty()) "sim" else "nao") +
+            " linhas=" + lines.size + " R$=" + (if (joined.contains("R$")) "sim" else "nao")
+        lastRaw = joined.replace("\n", " · ").take(220)
+        return joined
     }
 
     private fun walk(n: AccessibilityNodeInfo, out: MutableSet<String>, depth: Int) {
@@ -248,6 +265,10 @@ class OfferReaderService : AccessibilityService() {
         // Texto curto de diagnóstico, mostrado na tela principal para depuração.
         @Volatile
         var lastDiag: String = "aguardando primeira corrida"
+
+        // Trecho do texto cru lido na última corrida (para depuração).
+        @Volatile
+        var lastRaw: String = "—"
 
         private val RIDE_PACKAGES = setOf(
             "com.ubercab.driver",   // Uber Motorista
