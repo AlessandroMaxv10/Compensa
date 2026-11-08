@@ -74,8 +74,10 @@ class OfferReaderService : AccessibilityService() {
 
     private fun scan() {
         val text = collectText()
-        if (!text.contains("R$")) return
-        val offer = OfferParser.parse(text, lastApp) ?: return
+        if (!text.contains("R$")) { lastDiag += " | sem R$"; return }
+        val offer = OfferParser.parse(text, lastApp)
+        if (offer == null) { lastDiag += " | R$ achado mas nao entendeu o card"; return }
+        lastDiag += " | OK R$" + offer.fare
         val sig = offer.fare.toString() + "|" + offer.tripKm + "|" + offer.pickupKm
         val now = SystemClock.uptimeMillis()
         if (sig == lastSig && now - lastSigAt < 30_000) return
@@ -201,15 +203,14 @@ class OfferReaderService : AccessibilityService() {
         val ra = try { rootInActiveWindow } catch (e: Exception) { null }
         if (ra != null) {
             val rpkg = ra.packageName?.toString() ?: ""
+            // NUNCA lê a própria tela do Compensa (senão lê a corrida de exemplo).
             if (isRideApp(rpkg) && appEnabled(rpkg)) {
                 lastApp = if (rpkg.contains("99")) "99" else "Uber"
                 walk(ra, lines, 0)
-            } else if (foundRide) {
-                // app de corrida está na frente, mas a oferta pode estar numa
-                // janela de overlay com outro nome de pacote: lê mesmo assim.
-                walk(ra, lines, 0)
             }
         }
+        lastDiag = "app=" + lastApp + " janelas=" + ws.size + " ride=" + foundRide +
+            " linhas=" + lines.size + " R$=" + (if (lines.any { it.contains("R$") }) "sim" else "nao")
         return lines.joinToString("\n")
     }
 
@@ -238,6 +239,10 @@ class OfferReaderService : AccessibilityService() {
     companion object {
         @Volatile
         var instance: OfferReaderService? = null
+
+        // Texto curto de diagnóstico, mostrado na tela principal para depuração.
+        @Volatile
+        var lastDiag: String = "aguardando primeira corrida"
 
         private val RIDE_PACKAGES = setOf(
             "com.ubercab.driver",   // Uber Motorista

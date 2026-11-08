@@ -31,6 +31,7 @@ class MainActivity : Activity() {
     private lateinit var session: Session
     private lateinit var statusText: TextView
     private lateinit var overlayText: TextView
+    private lateinit var diagText: TextView
     private lateinit var locText: TextView
     private lateinit var todayText: TextView
     private lateinit var aiText: TextView
@@ -88,6 +89,10 @@ class MainActivity : Activity() {
         }
         button(st, "Testar com corrida de exemplo (Uber)", primary = false) { test(SAMPLE_UBER, "Uber") }
         button(st, "Testar com corrida de exemplo (99)", primary = false) { test(SAMPLE_99, "99") }
+        st.addView(text("🔎 Diagnóstico (mostra o que a última corrida real entregou):", 13f, color = Ui.MUTED))
+        diagText = text("—", 13f, color = Ui.MUTED)
+        st.addView(diagText)
+        button(st, "Atualizar diagnóstico", primary = false) { refresh() }
         previewText = text("", 15f, true, Color.WHITE).apply { setPadding(dp(12), dp(10), dp(12), dp(10)); visibility = android.view.View.GONE }
         st.addView(previewText)
 
@@ -235,6 +240,8 @@ class MainActivity : Activity() {
         overlayText.text = if (overlayOn) "✅ Pode aparecer sobre a Uber/99."
         else "⛔ Falta liberar o balão sobre a Uber/99. Toque no botão \"2)\" abaixo."
         overlayText.setTextColor(if (overlayOn) Ui.GREEN else Color.rgb(217, 48, 37))
+
+        if (::diagText.isInitialized) diagText.text = OfferReaderService.lastDiag
 
         val locOn = Locator.hasPermission(this)
         locText.text = if (locOn) "✅ Localização permitida. O cálculo usa onde você está agora."
