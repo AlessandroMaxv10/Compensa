@@ -189,6 +189,11 @@ class MainActivity : Activity() {
         val hist = card(root, "Últimas corridas analisadas")
         historyText = text("", 14f)
         hist.addView(historyText)
+        button(hist, "Limpar histórico", primary = false) {
+            History.clear(this)
+            Toast.makeText(this, "Histórico limpo", Toast.LENGTH_SHORT).show()
+            refresh()
+        }
 
         // --- Suporte ---
         val sup = card(root, "📲 Suporte")

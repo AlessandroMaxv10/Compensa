@@ -3,6 +3,7 @@
 'use strict';
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -19,6 +20,48 @@ const N = 12;
 const PRIOR = [-4.0, 2.0, 2.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -0.5, 0.3];
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// ---------- auto-atualização do APK (baixa do GitHub sozinho) ----------
+const APK_FILE = path.join(DATA_DIR, 'compensa.apk');
+const APK_URL = 'https://github.com/AlessandroMaxv10/Compensa/releases/download/latest/Compensa.apk';
+let lastApkPull = 0;
+let apkPulling = null;
+function httpsGetFollow(url, cb, redirects) {
+  redirects = redirects || 0;
+  if (redirects > 6) return cb(new Error('muitos redirecionamentos'));
+  https.get(url, { headers: { 'User-Agent': 'Compensa-Server' } }, (r) => {
+    if (r.statusCode >= 300 && r.statusCode < 400 && r.headers.location) {
+      r.resume();
+      return httpsGetFollow(r.headers.location, cb, redirects + 1);
+    }
+    if (r.statusCode !== 200) { r.resume(); return cb(new Error('HTTP ' + r.statusCode)); }
+    cb(null, r);
+  }).on('error', cb);
+}
+function fetchLatestApk() {
+  if (apkPulling) return apkPulling;
+  apkPulling = new Promise((resolve, reject) => {
+    const tmp = APK_FILE + '.tmp';
+    httpsGetFollow(APK_URL, (err, r) => {
+      if (err) return reject(err);
+      const ws = fs.createWriteStream(tmp);
+      r.pipe(ws);
+      ws.on('finish', () => ws.close(() => {
+        try {
+          if (fs.statSync(tmp).size > 100000) {
+            fs.renameSync(tmp, APK_FILE);
+            lastApkPull = Date.now();
+            resolve(true);
+          } else { try { fs.unlinkSync(tmp); } catch (e) {} reject(new Error('arquivo pequeno')); }
+        } catch (e) { reject(e); }
+      }));
+      ws.on('error', reject);
+    });
+  }).then(v => { apkPulling = null; return v; }, e => { apkPulling = null; throw e; });
+  return apkPulling;
+}
+// baixa uma vez quando o servidor sobe
+fetchLatestApk().then(() => console.log('APK atualizado do GitHub')).catch(e => console.log('APK: usando o que houver (' + e.message + ')'));
 
 // ---------- banco de dados (arquivo JSON) ----------
 let db = { users: [], samples: [], model: { w: PRIOR, n: 0, updatedAt: null }, secret: null };
@@ -231,7 +274,11 @@ const server = http.createServer(async (req, res) => {
 
     // Download do APK (arquivo em DATA_DIR/compensa.apk)
     if (req.method === 'GET' && p === '/download') {
-      const apk = path.join(DATA_DIR, 'compensa.apk');
+      const apk = APK_FILE;
+      // Auto-atualiza do GitHub: se a cache tem mais de 40s (ou não existe), busca a última.
+      if (!fs.existsSync(apk) || Date.now() - lastApkPull > 40 * 1000) {
+        try { await fetchLatestApk(); } catch (e) { /* mantém o APK atual se falhar */ }
+      }
       if (!fs.existsSync(apk)) {
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', ...SEC_HEADERS });
         return res.end('<meta charset="utf-8"><body style="font-family:sans-serif;padding:24px">O aplicativo ainda não foi publicado. Fale com o suporte.</body>');
