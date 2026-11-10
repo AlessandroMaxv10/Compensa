@@ -77,19 +77,45 @@ class OfferReaderService : AccessibilityService() {
                 if (set.isNotEmpty()) eventText = set.joinToString("\n")
             }
         } catch (e: Exception) {}
-        if (pending) return
-        pending = true
-        // duas tentativas: o card pode terminar de desenhar um pouco depois
-        handler.postDelayed({ scan() }, 80)
-        handler.postDelayed({ pending = false; scan() }, 550)
+        if (!pending) {
+            pending = true
+            handler.postDelayed({ pending = false; scan() }, 80)
+        }
+        // A Uber às vezes mostra a oferta SEM disparar evento. Então, enquanto o
+        // app de corrida estiver na frente, varremos a tela sozinhos de tempos em
+        // tempos para pegar a oferta assim que ela aparecer.
+        ensurePolling()
     }
 
-    private fun logDiag(line: String) {
-        lastDiag = line
+    private var polling = false
+    private val poller = object : Runnable {
+        override fun run() {
+            polling = false
+            try {
+                val pkg = rootInActiveWindow?.packageName?.toString()
+                if (pkg != null && isRideApp(pkg) && appEnabled(pkg)) {
+                    lastApp = if (pkg.contains("99")) "99" else "Uber"
+                    scan()
+                    ensurePolling() // continua enquanto o app de corrida estiver na frente
+                }
+            } catch (e: Exception) {}
+        }
+    }
+    private fun ensurePolling() {
+        if (polling) return
+        polling = true
+        handler.postDelayed(poller, 700)
+    }
+
+    private var lastLogBody = ""
+    private fun logDiag(stamp: String, body: String) {
+        lastDiag = "$stamp $body"
+        if (body == lastLogBody) return // não repete leitura idêntica (evita encher o log na varredura)
+        lastLogBody = body
         try {
             val sp = getSharedPreferences("compensa_diag", MODE_PRIVATE)
             val cur = sp.getString("log", "") ?: ""
-            val lines = (cur.split("\n") + line).filter { it.isNotBlank() }.takeLast(12)
+            val lines = (cur.split("\n") + "$stamp $body").filter { it.isNotBlank() }.takeLast(14)
             sp.edit().putString("log", lines.joinToString("\n")).apply()
         } catch (e: Exception) {}
     }
@@ -101,14 +127,15 @@ class OfferReaderService : AccessibilityService() {
     private fun scan() {
         val stamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
         val ev = eventText
+        eventText = "" // consome: cada evento é usado uma vez só
         // 1) Primeiro tenta SÓ o card que mudou na tela (isola a oferta e evita
         //    pegar o total de ganhos da tela inicial da Uber).
         var src = "card"
         var text = ev
         var offer = if (ev.contains("R$") && !isSelf(ev)) OfferParser.parse(ev, lastApp) else null
-        // 2) Se o card isolado não deu, tenta a tela inteira.
+        // 2) Se o card isolado não deu, varre a tela inteira (atual).
         if (offer == null) {
-            val full = collectText()
+            val full = collectText(ev)
             if (full.length > text.length) text = full
             if (full.contains("R$") && !isSelf(full)) {
                 val o = OfferParser.parse(full, lastApp)
@@ -123,9 +150,9 @@ class OfferReaderService : AccessibilityService() {
                 !Regex("""\d\s*km""", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "so tela inicial (sem corrida)"
                 else -> "ACHOU R\$ mas nao entendeu o card"
             }
-            logDiag("$stamp $lastApp $why | $snip"); return
+            logDiag(stamp, "$lastApp $why | $snip"); return
         }
-        logDiag("$stamp $lastApp OK[$src] R\$${offer.fare} km=${offer.pickupKm + offer.tripKm}")
+        logDiag(stamp, "$lastApp OK[$src] R\$${offer.fare} km=${offer.pickupKm + offer.tripKm}")
         val sig = offer.fare.toString() + "|" + offer.tripKm + "|" + offer.pickupKm
         val now = SystemClock.uptimeMillis()
         if (sig == lastSig && now - lastSigAt < 30_000) return
@@ -234,14 +261,14 @@ class OfferReaderService : AccessibilityService() {
     private var lastApp = "Uber"
     private var eventText = ""
 
-    private fun collectText(): String {
+    private fun collectText(pre: String = ""): String {
         // Junta o texto de TODAS as janelas do app de corrida (a oferta às vezes
         // aparece numa janela separada por cima do mapa) + a janela ativa.
         // Usa um conjunto para não repetir linhas quando as janelas se sobrepõem.
         val lines = LinkedHashSet<String>()
         // Começa pelo que mudou na tela (nó de origem do último evento).
-        if (eventText.isNotEmpty()) lines.addAll(eventText.split("\n"))
-        var foundRide = eventText.isNotEmpty()
+        if (pre.isNotEmpty()) lines.addAll(pre.split("\n"))
+        var foundRide = pre.isNotEmpty()
         val ws = try { windows } catch (e: Exception) { emptyList<android.view.accessibility.AccessibilityWindowInfo>() }
         for (w in ws) {
             val r = w.root ?: continue
