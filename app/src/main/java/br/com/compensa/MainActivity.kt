@@ -89,10 +89,14 @@ class MainActivity : Activity() {
         }
         button(st, "Testar com corrida de exemplo (Uber)", primary = false) { test(SAMPLE_UBER, "Uber") }
         button(st, "Testar com corrida de exemplo (99)", primary = false) { test(SAMPLE_99, "99") }
-        st.addView(text("🔎 Diagnóstico (mostra o que a última corrida real entregou):", 13f, color = Ui.MUTED))
-        diagText = text("—", 13f, color = Ui.MUTED)
+        st.addView(text("🔎 Diagnóstico — últimas leituras da tela (abra a Uber, espere corridas, volte e tire print):", 13f, color = Ui.MUTED))
+        diagText = text("—", 12f, color = Ui.MUTED)
         st.addView(diagText)
-        button(st, "Atualizar diagnóstico", primary = false) { refresh() }
+        button(st, "Atualizar", primary = false) { refresh() }
+        button(st, "Limpar log", primary = false) {
+            getSharedPreferences("compensa_diag", MODE_PRIVATE).edit().clear().apply()
+            refresh()
+        }
         previewText = text("", 15f, true, Color.WHITE).apply { setPadding(dp(12), dp(10), dp(12), dp(10)); visibility = android.view.View.GONE }
         st.addView(previewText)
 
@@ -247,7 +251,10 @@ class MainActivity : Activity() {
         overlayText.setTextColor(if (overlayOn) Ui.GREEN else Color.rgb(217, 48, 37))
 
         if (::diagText.isInitialized) {
-            diagText.text = OfferReaderService.lastDiag + "\n\nTexto lido:\n" + OfferReaderService.lastRaw
+            val log = getSharedPreferences("compensa_diag", MODE_PRIVATE).getString("log", "") ?: ""
+            diagText.text = if (log.isBlank())
+                "Nenhuma leitura registrada ainda.\nAbra a Uber/99 e espere uma corrida aparecer, depois volte aqui."
+            else log
         }
 
         val locOn = Locator.hasPermission(this)

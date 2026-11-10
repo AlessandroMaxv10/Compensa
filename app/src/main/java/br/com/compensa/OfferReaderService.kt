@@ -84,17 +84,29 @@ class OfferReaderService : AccessibilityService() {
         handler.postDelayed({ pending = false; scan() }, 550)
     }
 
+    private fun logDiag(line: String) {
+        lastDiag = line
+        try {
+            val sp = getSharedPreferences("compensa_diag", MODE_PRIVATE)
+            val cur = sp.getString("log", "") ?: ""
+            val lines = (cur.split("\n") + line).filter { it.isNotBlank() }.takeLast(12)
+            sp.edit().putString("log", lines.joinToString("\n")).apply()
+        } catch (e: Exception) {}
+    }
+
     private fun scan() {
         val text = collectText()
-        if (!text.contains("R$")) { lastDiag += " | sem R$"; return }
+        val stamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+        val snip = text.replace("\n", " · ").take(150)
+        if (!text.contains("R$")) { logDiag("$stamp $lastApp SEM R$ | $snip"); return }
         // Blindagem: nunca reage à própria tela/balão do Compensa (corrida falsa).
         if (text.contains("COMPENSA") || text.contains("Lucro estimado") ||
             text.contains("IA aprendendo") || text.contains("NÃO COMPENSA")) {
-            lastDiag += " | ignorado (tela do proprio Compensa)"; return
+            logDiag("$stamp $lastApp IGNORADO (tela do proprio app)"); return
         }
         val offer = OfferParser.parse(text, lastApp)
-        if (offer == null) { lastDiag += " | R$ achado mas nao entendeu o card"; return }
-        lastDiag += " | OK R$" + offer.fare
+        if (offer == null) { logDiag("$stamp $lastApp ACHOU R\$ mas nao entendeu | $snip"); return }
+        logDiag("$stamp $lastApp OK R\$${offer.fare} km=${offer.pickupKm + offer.tripKm}")
         val sig = offer.fare.toString() + "|" + offer.tripKm + "|" + offer.pickupKm
         val now = SystemClock.uptimeMillis()
         if (sig == lastSig && now - lastSigAt < 30_000) return
