@@ -35,13 +35,28 @@ object OfferParser {
     fun parse(text: String, app: String): Offer? {
         if (!text.contains("R$")) return null
 
-        // Valor: o maior "R$" que não seja um adicional "+R$"
+        // Valor da corrida.
         var fare = 0.0
         var surge = false
-        for (m in PRICE.findAll(text)) {
-            val v = toDouble(m.groupValues[2])
-            if (m.groupValues[1].isNotEmpty()) { surge = true; continue }
-            if (v > fare && v < 2000) fare = v
+        // Na Uber o preço vem logo ANTES de "Est. de R$ X/km". Pegamos o último
+        // R$ antes desse trecho — assim ignoramos o total de ganhos do dia (que
+        // fica na tela inicial) e qualquer outro valor solto na tela.
+        val estIdx = Regex("""(?i)est\.?\s*de\s*r\$""").find(text)?.range?.first ?: -1
+        if (estIdx > 0) {
+            val before = text.substring(0, estIdx)
+            val cand = PRICE.findAll(before).lastOrNull { it.groupValues[1].isEmpty() }
+            if (cand != null) {
+                val v = toDouble(cand.groupValues[2])
+                if (v in 0.5..2000.0) fare = v
+            }
+        }
+        // Senão (99 e outros), usa o maior R$ que não seja um adicional "+R$".
+        if (fare <= 0) {
+            for (m in PRICE.findAll(text)) {
+                if (m.groupValues[1].isNotEmpty()) { surge = true; continue }
+                val v = toDouble(m.groupValues[2])
+                if (v > fare && v < 2000) fare = v
+            }
         }
         if (fare <= 0) return null
         if (Regex("(?i)(din[âa]mic|surge|\\d[.,]\\dx|tarifa alta)").containsMatchIn(text)) surge = true

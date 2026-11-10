@@ -94,19 +94,38 @@ class OfferReaderService : AccessibilityService() {
         } catch (e: Exception) {}
     }
 
+    private fun isSelf(t: String): Boolean =
+        t.contains("COMPENSA") || t.contains("Lucro estimado") ||
+            t.contains("IA aprendendo") || t.contains("NÃO COMPENSA")
+
     private fun scan() {
-        val text = collectText()
         val stamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
-        val snip = text.replace("\n", " · ").take(150)
-        if (!text.contains("R$")) { logDiag("$stamp $lastApp SEM R$ | $snip"); return }
-        // Blindagem: nunca reage à própria tela/balão do Compensa (corrida falsa).
-        if (text.contains("COMPENSA") || text.contains("Lucro estimado") ||
-            text.contains("IA aprendendo") || text.contains("NÃO COMPENSA")) {
-            logDiag("$stamp $lastApp IGNORADO (tela do proprio app)"); return
+        val ev = eventText
+        // 1) Primeiro tenta SÓ o card que mudou na tela (isola a oferta e evita
+        //    pegar o total de ganhos da tela inicial da Uber).
+        var src = "card"
+        var text = ev
+        var offer = if (ev.contains("R$") && !isSelf(ev)) OfferParser.parse(ev, lastApp) else null
+        // 2) Se o card isolado não deu, tenta a tela inteira.
+        if (offer == null) {
+            val full = collectText()
+            if (full.length > text.length) text = full
+            if (full.contains("R$") && !isSelf(full)) {
+                val o = OfferParser.parse(full, lastApp)
+                if (o != null) { offer = o; src = "tela"; text = full }
+            }
         }
-        val offer = OfferParser.parse(text, lastApp)
-        if (offer == null) { logDiag("$stamp $lastApp ACHOU R\$ mas nao entendeu | $snip"); return }
-        logDiag("$stamp $lastApp OK R\$${offer.fare} km=${offer.pickupKm + offer.tripKm}")
+        val snip = text.replace("\n", " · ").take(150)
+        if (offer == null) {
+            val why = when {
+                isSelf(text) -> "IGNORADO (proprio app)"
+                !text.contains("R$") -> "SEM R\$"
+                !Regex("""\d\s*km""", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "so tela inicial (sem corrida)"
+                else -> "ACHOU R\$ mas nao entendeu o card"
+            }
+            logDiag("$stamp $lastApp $why | $snip"); return
+        }
+        logDiag("$stamp $lastApp OK[$src] R\$${offer.fare} km=${offer.pickupKm + offer.tripKm}")
         val sig = offer.fare.toString() + "|" + offer.tripKm + "|" + offer.pickupKm
         val now = SystemClock.uptimeMillis()
         if (sig == lastSig && now - lastSigAt < 30_000) return
