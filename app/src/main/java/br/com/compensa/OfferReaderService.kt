@@ -88,6 +88,7 @@ class OfferReaderService : AccessibilityService() {
     }
 
     private var polling = false
+    private var idleScans = 0 // leituras seguidas sem corrida (para economizar bateria)
     private val poller = object : Runnable {
         override fun run() {
             polling = false
@@ -104,7 +105,15 @@ class OfferReaderService : AccessibilityService() {
     private fun ensurePolling() {
         if (polling) return
         polling = true
-        handler.postDelayed(poller, 700)
+        // Varredura adaptativa: rápida quando pode ter oferta, mais lenta quando
+        // está só na tela inicial há um tempo (poupa bateria). Uma oferta zera o
+        // contador e volta a varrer rápido na hora.
+        val interval = when {
+            idleScans < 6 -> 700L
+            idleScans < 20 -> 1300L
+            else -> 2300L
+        }
+        handler.postDelayed(poller, interval)
     }
 
     private var lastLogBody = ""
@@ -150,8 +159,10 @@ class OfferReaderService : AccessibilityService() {
                 !Regex("""\d\s*km""", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "so tela inicial (sem corrida)"
                 else -> "ACHOU R\$ mas nao entendeu o card"
             }
+            if (idleScans < 1000) idleScans++ // sem corrida: pode varrer mais devagar
             logDiag(stamp, "$lastApp $why | $snip"); return
         }
+        idleScans = 0 // achou corrida: volta a varrer rápido
         logDiag(stamp, "$lastApp OK[$src] R\$${offer.fare} km=${offer.pickupKm + offer.tripKm}")
         val sig = offer.fare.toString() + "|" + offer.tripKm + "|" + offer.pickupKm
         val now = SystemClock.uptimeMillis()

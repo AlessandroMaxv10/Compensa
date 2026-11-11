@@ -50,7 +50,20 @@ object OfferParser {
                 if (v in 0.5..2000.0) fare = v
             }
         }
-        // Senão (99 e outros), usa o maior R$ que não seja um adicional "+R$".
+        // 99 e afins não têm "Est. de". O valor da corrida costuma vir logo ANTES
+        // da nota do passageiro (ex.: "5,00 (5)"). Pegamos o último R$ antes dela.
+        if (fare <= 0) {
+            val ratingIdx = Regex("""\d{1,2},\d{2}\s*\(\s*\d+\s*\)""").find(text)?.range?.first ?: -1
+            if (ratingIdx > 0) {
+                val before = text.substring(0, ratingIdx)
+                val cand = PRICE.findAll(before).lastOrNull { it.groupValues[1].isEmpty() }
+                if (cand != null) {
+                    val v = toDouble(cand.groupValues[2])
+                    if (v in 0.5..2000.0) fare = v
+                }
+            }
+        }
+        // Último caso: o maior R$ que não seja um adicional "+R$".
         if (fare <= 0) {
             for (m in PRICE.findAll(text)) {
                 if (m.groupValues[1].isNotEmpty()) { surge = true; continue }
